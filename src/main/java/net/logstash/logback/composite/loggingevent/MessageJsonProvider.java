@@ -33,8 +33,19 @@ public class MessageJsonProvider extends AbstractFieldJsonProvider<ILoggingEvent
 
     @Override
     public void writeTo(JsonGenerator generator, ILoggingEvent event) throws IOException {
-        JsonWritingUtils.writeStringField(generator, getFieldName(), event.getFormattedMessage());
+        if(mayBeJSON(event.getFormattedMessage())) {
+        	generator.writeFieldName(getFieldName()+ "_");
+        	generator.writeRawValue(event.getFormattedMessage());
+        } else {
+            JsonWritingUtils.writeStringField(generator, getFieldName(), event.getFormattedMessage());
+        }
     }
+    
+    public static boolean mayBeJSON( String string ) {
+        return string != null
+              && ("null".equals( string )
+                    || (string.startsWith( "[" ) && string.endsWith( "]" )) || (string.startsWith( "{" ) && string.endsWith( "}" )));
+     }
     
     @Override
     public void setFieldNames(LogstashFieldNames fieldNames) {
